@@ -1,22 +1,20 @@
 import type { AuthData } from 'app/store/authStore/types/types';
+import { axiosAuth } from 'entities/baseApi';
 
+/** Ответ бэкенда после login / register */
+export type AuthTokenResponse = {
+  token: string;
+  expires: string;
+};
 
+const json = { headers: { 'Content-Type': 'application/json' } };
 
-const DEV_TOKEN = 'c63664bd-3b14-44c4-a1de-4a3fa1264781';
-type AuthResponse = { access_token: string };
-type AuthResponseMOCK = { data: AuthResponse };
-
+/** `POST …/api/Auth/login` и `/api/Auth/register` */
 export const authApi = {
-  login: (_data: AuthData) => {
-    /*return axiosV1.post<AuthResponse>('/login', data, {
-      headers: { 'Content-Type': 'application/json' },
-    });*/
-    return new Promise<AuthResponseMOCK>((resolve) => {
-      setTimeout(() => {
-        resolve({ data: { access_token: DEV_TOKEN } });
-      }, 500);
-    });
+  login: (data: AuthData) => {
+    return axiosAuth.post<AuthTokenResponse>('/login', data, json);
   },
-
- 
+  registration: (data: AuthData) => {
+    return axiosAuth.post<AuthTokenResponse>('/register', data, json);
+  },
 };

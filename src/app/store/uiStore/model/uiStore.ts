@@ -6,6 +6,12 @@ type CreateMeetingModalState = {
   hasChanges: boolean;
 };
 
+type UiNotification = {
+  open: boolean;
+  message: string;
+  severity: 'error' | 'warning' | 'info' | 'success';
+};
+
 export class UiStore {
   private _isNavBarShort = false;
   private _isDrag = false;
@@ -25,6 +31,11 @@ export class UiStore {
   private _createMeetingModalState: CreateMeetingModalState = {
     isOpen: false,
     hasChanges: false,
+  };
+  private _notification: UiNotification = {
+    open: false,
+    message: '',
+    severity: 'error',
   };
 
   constructor() {
@@ -66,5 +77,32 @@ export class UiStore {
   }
   public set isDrag(val: boolean) {
     this._isDrag = val;
+  }
+
+  public get notification() {
+    return this._notification;
+  }
+
+  public showError(message: string) {
+    this._notification = {
+      open: true,
+      message,
+      severity: 'error',
+    };
+  }
+
+  public showWarning(message: string) {
+    this._notification = {
+      open: true,
+      message,
+      severity: 'warning',
+    };
+  }
+
+  public closeNotification() {
+    this._notification = {
+      ...this._notification,
+      open: false,
+    };
   }
 }

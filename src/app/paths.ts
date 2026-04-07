@@ -1,6 +1,11 @@
+const root = '/pumpDatabase' as const;
+
+/** Маршруты приложения */
 export const paths = {
-    root: '/pumpDatabase',
-    pumpUnits: '/pumpUnits',
-    pumpUnitSelection: '/pumpUnitSelection',
-  } as const;
+  root,
+  /** Главный экран после входа / регистрации */
+  main: root,
+  pumpUnits: '/pumpUnits',
+  pumpUnitSelection: '/pumpUnitSelection',
+} as const;
   

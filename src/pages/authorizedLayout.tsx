@@ -24,10 +24,11 @@ const AuthorizedLayout = observer(function AuthorizedLayout() {
     >
       <Box
         sx={{
-          alignItems: 'flex-start',
+          alignItems: 'stretch',
           justifyContent: 'flex-start',
           display: 'flex',
           flexGrow: 1,
+          minHeight: 0,
           overflow: 'hidden',
           position: 'relative',
           height: '100%',
@@ -36,22 +37,36 @@ const AuthorizedLayout = observer(function AuthorizedLayout() {
         <Box
           sx={{
             flexGrow: 1,
-            p: '24px',
-            pl: '12px',
-            height: 1,
+            p: { xs: 2, sm: 2.5, xl: 3 },
+            pl: { xs: 1.5, sm: 2, xl: 2.5 },
+            height: '100%',
+            minHeight: 0,
             overflow: 'hidden',
+            boxSizing: 'border-box',
           }}
         >
           <Box
             sx={{
               bgcolor: theme.palette.background.paper,
               flexGrow: 1,
-              p: '12px',
-              borderRadius: '32px',
+              height: '100%',
+              minHeight: 0,
+              p: { xs: 1.5, xl: 2 },
+              borderRadius: { xs: '24px', xl: '28px' },
               overflow: 'hidden',
+              display: 'flex',
+              flexDirection: 'column',
             }}
           >
-            <Box sx={{ height: '100%', overflow: 'auto' }}>
+            <Box
+              sx={{
+                flex: 1,
+                minHeight: 0,
+                display: 'flex',
+                flexDirection: 'column',
+                overflow: 'hidden',
+              }}
+            >
               <Outlet />
             </Box>
           </Box>

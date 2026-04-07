@@ -5,9 +5,9 @@ import {
   RouterProvider,
 } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
-import { useStore } from 'app/store/useStore';
 import { paths } from 'app/paths';
 import RequireAuth from './RequireAuth';
+import RequireGuest from './RequireGuest';
 import RootLayout from 'pages/rootLayout';
 import AuthorizedLayout from 'pages/authorizedLayout';
 import PumpDatabasePageSkeleton from 'pages/pumpDatabase/PumpDatabasePageSkeleton';
@@ -33,9 +33,10 @@ const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      // ---------- LOGIN ----------
+      // ---------- LOGIN (гости) ----------
       {
         path: 'login',
+        element: <RequireGuest />,
         children: [
           {
             index: true,
