@@ -67,7 +67,7 @@ export function createEmptyPumpRow(rowId: number): PumpAssemblyRow {
     manufacturer: '',
     mark: '',
     correctionType: 'single',
-    passportImpellerFrequency: 0,
+    impellerFrequency: 0,
     id: 0,
     currentImpellerFrequency: 0,
     headCorrection: DEFAULT_HEAD_CORRECTION,
@@ -77,6 +77,7 @@ export function createEmptyPumpRow(rowId: number): PumpAssemblyRow {
     impellerBladeWidth: 0,
     inflowsCount: 0,
     stepsCount: 0,
+    configuration: 0,
   };
 }
 
@@ -87,7 +88,8 @@ export function rowFromPumpInput(input: PumpAssemblyPumpInput, rowId: number): P
     manufacturer: '',
     mark: '',
     correctionType: 'single',
-    passportImpellerFrequency: 0,
+    impellerFrequency: 0,
+    configuration: 0,
     ...input,
   };
 }

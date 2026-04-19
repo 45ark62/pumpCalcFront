@@ -10,7 +10,6 @@ import PumpTypeSelect from "entities/pumpUnits/ui/PumpTypeSelect";
 import type {
   PumpAssemblyCalculateRequest,
   PumpAssemblyPumpInput,
-  PumpCorrectionType,
 } from "entities/pumpUnits/types/pumpAssemblyTypes";
 import { useCallback, useEffect, useMemo } from "react";
 import PumpUnitsCharts from "./PumpUnitsCharts";
@@ -63,7 +62,7 @@ const PumpUnitsPage = observer(() => {
         id: selectedPump.id,
         manufacturer: selectedPump.manufacturer,
         mark: selectedPump.name,
-        passportImpellerFrequency: selectedPump.impellerFrequency,
+        impellerFrequency: selectedPump.impellerFrequency,
         currentImpellerFrequency: selectedPump.impellerFrequency,
         headCorrection: DEFAULT_HEAD_CORRECTION,
         efficiencyCorrection: DEFAULT_EFFICIENCY_CORRECTION,
@@ -79,7 +78,7 @@ const PumpUnitsPage = observer(() => {
   );
 
   const handleCorrectionTypeChange = useCallback(
-    (rowId: number, correctionType: PumpCorrectionType) =>
+    (rowId: number, correctionType: string) =>
       pumpUnitsStore.updateAssemblyRow(rowId, { correctionType }),
     [pumpUnitsStore]
   );

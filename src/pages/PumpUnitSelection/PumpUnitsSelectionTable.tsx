@@ -60,6 +60,7 @@ function typeLabel(typePump: number): string {
   return "Одиночная";
 }
 
+
 type Props = {
   data: PumpAssemblyRow[];
   selectedPumpId: number | null;
@@ -78,7 +79,6 @@ export default function PumpUnitsSelectionTable({
   onQuantityChange,
 }: Props) {
   const [draftQty, setDraftQty] = useState<Record<number, string>>({});
-
   return (
     <TableContainer
       component={Paper}
@@ -174,7 +174,7 @@ export default function PumpUnitsSelectionTable({
                   }}
                 />
               </TableCell>
-              <TableCell sx={cellSx}>{typeLabel(row.typePump)}</TableCell>
+              <TableCell sx={cellSx}>{typeLabel(row.configuration)}</TableCell>
               <TableCell sx={cellSx}>
                 <TextField
                   size="small"
@@ -203,7 +203,7 @@ export default function PumpUnitsSelectionTable({
               </TableCell>
               <TableCell sx={cellSx}>{row.manufacturer || "—"}</TableCell>
               <TableCell sx={cellSx}>{row.mark || "—"}</TableCell>
-              <TableCell sx={cellSx}>{fmt(row.passportImpellerFrequency)}</TableCell>
+              <TableCell sx={cellSx}>{fmt(row.impellerFrequency)}</TableCell>
             </TableRow>
           ))}
         </TableBody>

@@ -15,7 +15,6 @@ import { alpha } from "@mui/material/styles";
 import type { PumpDto } from "entities/pumpDatabase/types/pumpTypes";
 import type {
   PumpAssemblyRow,
-  PumpCorrectionType,
 } from "entities/pumpUnits/types/pumpAssemblyTypes";
 import { useState } from "react";
 
@@ -133,7 +132,7 @@ type Props = {
   onToggleAllChecked: (checked: boolean) => void;
   onManufacturerChange: (rowId: number, manufacturer: string) => void;
   onMarkChange: (rowId: number, pumpId: number) => void;
-  onCorrectionTypeChange: (rowId: number, value: PumpCorrectionType) => void;
+  onCorrectionTypeChange: (rowId: number, value: string) => void;
   onCurrentFrequencyChange: (rowId: number, value: number) => void;
   onHeadCorrectionChange: (rowId: number, value: number) => void;
   onEfficiencyCorrectionChange: (rowId: number, value: number) => void;
@@ -395,7 +394,7 @@ export default function PumpUnitsTable({
                   ))}
                 </Select>
               </TableCell>
-              <TableCell sx={cellSx}>{fmt(row.passportImpellerFrequency)}</TableCell>
+              <TableCell sx={cellSx}>{fmt(row.impellerFrequency)}</TableCell>
               <TableCell sx={cellSx}>
                 <TextField
                   size="small"
@@ -470,7 +469,7 @@ export default function PumpUnitsTable({
                   value={row.correctionType}
                   onClick={(e) => e.stopPropagation()}
                   onChange={(e) =>
-                    onCorrectionTypeChange(row.rowId, e.target.value as PumpCorrectionType)
+                    onCorrectionTypeChange(row.rowId, e.target.value)
                   }
                   sx={selectSx}
                 >

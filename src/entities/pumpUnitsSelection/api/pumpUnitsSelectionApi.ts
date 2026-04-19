@@ -1,5 +1,5 @@
 import { axiosV1 } from 'entities/baseApi';
-
+//подбор насосной установки
 export type PumpAssemblyAdjustRequest = {
   rate: number;
   workingAreaDelta: number;

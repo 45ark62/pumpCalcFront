@@ -12,7 +12,7 @@ export type PumpAssemblyPumpInput = {
   stepsCount: number;
 };
 
-export type PumpCorrectionType = 'single' | 'mainline';
+
 
 export type PumpAssemblyRow = PumpAssemblyPumpInput & {
   /** Локальный id строки в таблице (не id насоса из БД). */
@@ -20,8 +20,9 @@ export type PumpAssemblyRow = PumpAssemblyPumpInput & {
   checked: boolean;
   manufacturer: string;
   mark: string;
-  passportImpellerFrequency: number;
-  correctionType: PumpCorrectionType;
+  impellerFrequency: number;
+  correctionType: string;
+  configuration: number;
 };
 
 export type PumpAssemblyCalculateRequest = {

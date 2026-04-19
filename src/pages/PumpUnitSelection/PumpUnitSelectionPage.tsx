@@ -28,9 +28,12 @@ const PumpUnitSelectionPage = observer(() => {
   const [pressureDeviation, setPressureDeviation] = useState(5);
   const [useHeadCorrection, setUseHeadCorrection] = useState(true);
   const [usePassportFrequency, setUsePassportFrequency] = useState(true);
+  const [headCorrectionValue, setHeadCorrectionValue] = useState(1);
+  const [passportFrequencyValue, setPassportFrequencyValue] = useState(50);
   const [maxParallel, setMaxParallel] = useState(3);
   const [maxSequential, setMaxSequential] = useState(3);
-  const [autoSelect, setAutoSelect] = useState(true);
+  const [maxParallelChecked, setMaxParallelChecked] = useState(true);
+  const [maxSequentialChecked, setMaxSequentialChecked] = useState(true);
   const [resultRows, setResultRows] = useState<PumpAssemblyRow[]>([]);
 
   const asNum = (v: unknown, fallback = 0) =>
@@ -54,37 +57,24 @@ const PumpUnitSelectionPage = observer(() => {
       manufacturer: asStr(src.manufacturer),
       mark: asStr(src.mark ?? src.name),
       correctionType: asStr(o.correctionType ?? src.correctionType) === "mainline" ? "mainline" : "single",
-      passportImpellerFrequency: asNum(
-        src.passportImpellerFrequency,
+      impellerFrequency: asNum(
+        src.passportImpellerFrequency ?? src.impellerFrequency,
         asNum(src.currentImpellerFrequency)
       ),
       id: asNum(src.id),
-      currentImpellerFrequency: asNum(src.currentImpellerFrequency),
+      currentImpellerFrequency: asNum(src.currentImpellerFrequency, asNum(src.impellerFrequency)),
       headCorrection: asNum(o.headCorrection ?? src.headCorrection, 1),
       efficiencyCorrection: asNum(o.efficiencyCorrection ?? src.efficiencyCorrection, 1),
       typePump: asNum(o.typePump ?? src.typePump),
       wheelDiameter: asNum(o.wheelDiameter ?? src.wheelDiameter, 1),
       impellerBladeWidth: asNum(o.impellerBladeWidth ?? src.impellerBladeWidth),
       inflowsCount: asNum(o.inflowsCount ?? src.inflowsCount),
-      stepsCount: asNum(o.stepsCount ?? o.count ?? src.stepsCount ?? src.count, 1),
+      /** В таблице подбора — число одинаковых насосов в конфигурации (`count` с бэка). */
+      stepsCount: asNum(o.count ?? o.stepsCount ?? src.stepsCount ?? src.count, 1),
+      configuration: asNum(o.configuration ?? src.configuration),
     };
   };
 
-  const extractResultArray = (result: unknown): unknown[] => {
-    if (Array.isArray(result)) return result;
-    if (!result || typeof result !== "object") return [];
-    const o = result as Record<string, unknown>;
-    const candidates = [
-      o.results,
-      o.items,
-      o.configurations,
-      o.pumpAssemblies,
-      o.pumps,
-      o.data,
-    ];
-    const arr = candidates.find((x) => Array.isArray(x));
-    return Array.isArray(arr) ? arr : [];
-  };
 
   useEffect(() => {
     void pumpDatabaseStore.fetchPumps();
@@ -124,11 +114,7 @@ const PumpUnitSelectionPage = observer(() => {
           bgcolor: "#ffffff",
           boxShadow: "0 8px 22px rgba(15, 23, 42, 0.07)",
         }}>
-        <FormControlLabel
-          control={<Checkbox size="small" checked={autoSelect} onChange={(e) => setAutoSelect(e.target.checked)} />}
-          label={<Typography sx={{ fontSize: 12, fontWeight: 600 }}>Автоматический подбор НУ</Typography>}
-          sx={{ mx: 0 }}
-        />
+    
 
         <Box
           sx={{
@@ -220,17 +206,19 @@ const PumpUnitSelectionPage = observer(() => {
           />
           <TextField
             size="small"
-            value={1}
-            disabled
+            value={headCorrectionValue}
+            onChange={(e) => setHeadCorrectionValue(toNumber(e.target.value))}
+            disabled={!useHeadCorrection}
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
           />
           <FormControlLabel
-            control={<Checkbox size="small" checked={autoSelect} onChange={(e) => setAutoSelect(e.target.checked)} />}
+            control={<Checkbox size="small" checked={maxParallelChecked} onChange={(e) => setMaxParallelChecked(e.target.checked)} />}
             label={<Typography sx={{ fontSize: 12 }}>Максимальное число параллельных насосов</Typography>}
             sx={{ mx: 0 }}
           />
           <TextField
             size="small"
+            disabled={!maxParallelChecked}
             value={maxParallel}
             onChange={(e) => setMaxParallel(toNumber(e.target.value))}
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
@@ -252,17 +240,19 @@ const PumpUnitSelectionPage = observer(() => {
           />
           <TextField
             size="small"
-            value={50}
-            disabled
+            value={passportFrequencyValue}
+            onChange={(e) => setPassportFrequencyValue(toNumber(e.target.value))}
+            disabled={!usePassportFrequency}
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
           />
           <FormControlLabel
-            control={<Checkbox size="small" checked={autoSelect} onChange={(e) => setAutoSelect(e.target.checked)} />}
+            control={<Checkbox size="small" checked={maxSequentialChecked} onChange={(e) => setMaxSequentialChecked(e.target.checked)} />}
             label={<Typography sx={{ fontSize: 12 }}>Максимальное число последовательных насосов</Typography>}
             sx={{ mx: 0 }}
           />
           <TextField
             size="small"
+            disabled={!maxSequentialChecked}
             value={maxSequential}
             onChange={(e) => setMaxSequential(toNumber(e.target.value))}
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
@@ -294,16 +284,18 @@ const PumpUnitSelectionPage = observer(() => {
                   enviromentDensity: pumpUnitsStore.assemblyRho,
                   setHeadCorrection: useHeadCorrection,
                   setPassportImpellerFrequency: usePassportFrequency,
-                  passportImpellerFrequency: 50,
-                  headCorrection: useHeadCorrection ? 1 : 0,
+                  passportImpellerFrequency: passportFrequencyValue,
+                  headCorrection: useHeadCorrection ? headCorrectionValue : 0,
                   parallelPumpsMaxCount: maxParallel,
                   serialPumpsMaxCount: maxSequential,
-                  setParallelPumpsMaxCount: autoSelect,
-                  setSerialPumpsMaxCount: autoSelect,
+                  setParallelPumpsMaxCount: maxParallelChecked,
+                  setSerialPumpsMaxCount: maxSequentialChecked,
                 };
                 try {
                   const result = await pumpUnitsSelectionStore.calculate(body);
-                  const rows = extractResultArray(result).map(mapResultToRow);
+                  //@ts-ignore
+                  const rows = result.map(mapResultToRow);
+                  console.log(rows);
                   setResultRows(rows);
                 } catch {
                   setResultRows([]);
@@ -354,10 +346,10 @@ const PumpUnitSelectionPage = observer(() => {
                     uiStore.showError("Выберите конфигурацию для применения");
                     return;
                   }
-                  const added = pumpUnitsStore.applySelectionRowsToAssembly(selected);
+                  const added = pumpUnitsStore.replaceAssemblyWithSelection(selected);
                   if (added > 0) {
                     uiStore.showWarning(
-                      "Добавлена насосная установка. Для расчета перейдите на вкладку насосные установки"
+                      "Таблица насосной установки заменена выбранной конфигурацией подбора. Для расчёта перейдите на вкладку «Насосные установки»."
                     );
                     setResultRows((prev) => prev.map((r) => ({ ...r, checked: false })));
                   }
