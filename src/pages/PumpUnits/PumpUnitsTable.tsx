@@ -301,10 +301,10 @@ export default function PumpUnitsTable({
               Тип
             </TableCell>
             <TableCell rowSpan={2} sx={subHeaderCellSx}>
-              Внешний диаметр рабочего колеса
+              Внешний диаметр рабочего колеса, м
             </TableCell>
             <TableCell rowSpan={2} sx={subHeaderCellSx}>
-              Ширина лопатки
+              Ширина лопатки, м
             </TableCell>
             <TableCell rowSpan={2} sx={subHeaderCellSx}>
               Количество сторон всасывания

@@ -100,7 +100,7 @@ export default function PumpFormDialog({
             size="small"
           />
           <TextField
-            label="Подача, м³/сут"
+            label="Подача, м³/час"
             value={String(form.supply)}
             onChange={(e) => setField('supply', toNumber(e.target.value))}
             size="small"
@@ -112,13 +112,13 @@ export default function PumpFormDialog({
             size="small"
           />
           <TextField
-            label="Минимальный расход, м³/сут"
+            label="Минимальный расход, м³/час"
             value={String(form.minRate)}
             onChange={(e) => setField('minRate', toNumber(e.target.value))}
             size="small"
           />
           <TextField
-            label="Максимальный расход, м³/сут"
+            label="Максимальный расход, м³/час"
             value={String(form.maxRate)}
             onChange={(e) => setField('maxRate', toNumber(e.target.value))}
             size="small"

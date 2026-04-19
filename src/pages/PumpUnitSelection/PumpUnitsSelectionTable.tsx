@@ -55,8 +55,8 @@ function fmt(n: number): string {
 }
 
 function typeLabel(typePump: number): string {
-  if (typePump === 1) return "Параллельная";
-  if (typePump === 2) return "Последовательная";
+  if (typePump === 1) return "Последовательная";
+  if (typePump === 2) return "Параллельная";
   return "Одиночная";
 }
 

@@ -43,10 +43,10 @@ export default function PumpUnitsCharts({ result }: Props) {
         gap: 1,
       }}>
       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, px: 0.5 }}>
-        <Typography variant="body2">Мощность: {result ? num(result.powerInput) : "—"}</Typography>
-        <Typography variant="body2">Напор: {result ? num(result.head) : "—"}</Typography>
-        <Typography variant="body2">КПД: {result ? num(result.efficiency) : "—"}</Typography>
-        <Typography variant="body2">Перепад давления: {result ? num(result.pressureDrop) : "—"}</Typography>
+        <Typography variant="body2">Потребляемая мощность, кВт: {result ? num(result.powerInput) : "—"}</Typography>
+        <Typography variant="body2">Напор, м: {result ? num(result.head) : "—"}</Typography>
+        <Typography variant="body2">КПД, %: {result ? num(result.efficiency) : "—"}</Typography>
+        <Typography variant="body2">Перепад давления, Бар: {result ? num(result.pressureDrop) : "—"}</Typography>
       </Box>
 
       <Box sx={{ height: 300 }}>

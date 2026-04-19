@@ -270,7 +270,7 @@ const PumpUnitsPage = observer(() => {
               boxShadow: "0 8px 22px rgba(15, 23, 42, 0.07)",
             }}>
             <Box sx={{ display: "flex", flexDirection: "row", gap: 1, alignItems: "center" }}>
-              Объёмный расход жидкости:
+              Объёмный расход жидкости, м³/час:
               <TextField
                 size="small"
                 type="number"
@@ -284,7 +284,7 @@ const PumpUnitsPage = observer(() => {
             </Box>
 
             <Box sx={{ display: "flex", flexDirection: "row", gap: 1, alignItems: "center" }}>
-              Кинематическая вязкость жидкости:
+              Кинематическая вязкость жидкости, м²/сек:
               <TextField
                 size="small"
                 type="number"
@@ -298,7 +298,7 @@ const PumpUnitsPage = observer(() => {
             </Box>
 
             <Box sx={{ display: "flex", flexDirection: "row", gap: 1, alignItems: "center" }}>
-              Плотность жидкости:
+              Плотность жидкости, кг/м³:
               <TextField
                 size="small"
                 type="number"

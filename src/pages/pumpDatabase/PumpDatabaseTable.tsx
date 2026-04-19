@@ -204,10 +204,10 @@ export default function PumpDatabaseTable({
             <TableCell sx={subHeaderCellSx}>
               Частота вращения рабочего колеса, Гц
             </TableCell>
-            <TableCell sx={subHeaderCellSx}>Подача, м³/сут</TableCell>
+            <TableCell sx={subHeaderCellSx}>Подача, м³/час</TableCell>
             <TableCell sx={subHeaderCellSx}>Напор, м</TableCell>
-            <TableCell sx={subHeaderCellSx}>Минимальный расход, м³/сут</TableCell>
-            <TableCell sx={subHeaderCellSx}>Максимальный расход, м³/сут</TableCell>
+            <TableCell sx={subHeaderCellSx}>Минимальный расход, м³/час</TableCell>
+            <TableCell sx={subHeaderCellSx}>Максимальный расход, м³/час</TableCell>
           </TableRow>
         </TableHead>
         <TableBody sx={{ bgcolor: 'background.paper' }}>
