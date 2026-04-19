@@ -41,6 +41,7 @@ export type PumpAssemblyPlotPoint = {
 
 export type PumpAssemblyCalculateResponse = {
   powerInput: number;
+  pressureDrop: number;
   efficiency: number;
   head: number;
   plotPoint: PumpAssemblyPlotPoint[];

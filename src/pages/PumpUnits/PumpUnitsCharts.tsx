@@ -46,6 +46,7 @@ export default function PumpUnitsCharts({ result }: Props) {
         <Typography variant="body2">Мощность: {result ? num(result.powerInput) : "—"}</Typography>
         <Typography variant="body2">Напор: {result ? num(result.head) : "—"}</Typography>
         <Typography variant="body2">КПД: {result ? num(result.efficiency) : "—"}</Typography>
+        <Typography variant="body2">Перепад давления: {result ? num(result.pressureDrop) : "—"}</Typography>
       </Box>
 
       <Box sx={{ height: 300 }}>

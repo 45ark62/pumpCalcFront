@@ -21,7 +21,7 @@ const TEXT_MUTED = 'rgba(255, 255, 255, 0.72)';
 
 const navItems: { to: string; label: string }[] = [
   { to: paths.root, label: 'База насосов' },
-  { to: paths.pumpUnits, label: 'Насосные установки' },
+  { to: paths.pumpUnits, label: 'Расчёт установки' },
   { to: paths.pumpUnitSelection, label: 'Подбор' },
 ];
 
