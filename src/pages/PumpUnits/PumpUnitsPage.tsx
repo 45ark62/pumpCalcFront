@@ -24,6 +24,10 @@ function toNumber(value: string): number {
 
 const PumpUnitsPage = observer(() => {
   const { pumpDatabaseStore, pumpUnitsStore } = useStore();
+  const isFlowValid = pumpUnitsStore.assemblyGvMix > 0;
+  const isViscosityValid = pumpUnitsStore.assemblyNu > 0;
+  const isDensityValid = pumpUnitsStore.assemblyRho >= 800 && pumpUnitsStore.assemblyRho <= 2000;
+  const isBottomFormValid = isFlowValid && isViscosityValid && isDensityValid;
 
   useEffect(() => {
     void pumpDatabaseStore.fetchPumps();
@@ -132,6 +136,10 @@ const PumpUnitsPage = observer(() => {
   );
 
   const handleCalculate = useCallback(async () => {
+    if (!isBottomFormValid) {
+      return;
+    }
+
     const rowsPayload: PumpAssemblyPumpInput[] = pumpUnitsStore.assemblyPumps
       .filter((row) => row.checked && row.id > 0)
       .map((row) => ({
@@ -160,9 +168,10 @@ const PumpUnitsPage = observer(() => {
       // eslint-disable-next-line no-console
       console.error("PumpAssembly calculate failed", e);
     }
-  }, [pumpUnitsStore]);
+  }, [isBottomFormValid, pumpUnitsStore]);
 
-  const canCalculate = pumpUnitsStore.assemblyPumps.some((row) => row.checked && row.id > 0);
+  const canCalculate =
+    pumpUnitsStore.assemblyPumps.some((row) => row.checked && row.id > 0) && isBottomFormValid;
   const hasCheckedRows = pumpUnitsStore.assemblyPumps.some((row) => row.checked);
 
   return (
@@ -275,6 +284,8 @@ const PumpUnitsPage = observer(() => {
                 type="number"
                 value={pumpUnitsStore.assemblyGvMix}
                 onChange={(e) => pumpUnitsStore.setAssemblyGvMix(toNumber(e.target.value))}
+                error={!isFlowValid}
+                helperText={!isFlowValid ? "Расход должен быть больше 0" : undefined}
                 sx={{
                   minWidth: 210,
                   "& .MuiOutlinedInput-root": { borderRadius: 1.5, bgcolor: "#f8fbff" },
@@ -289,6 +300,8 @@ const PumpUnitsPage = observer(() => {
                 type="number"
                 value={pumpUnitsStore.assemblyNu}
                 onChange={(e) => pumpUnitsStore.setAssemblyNu(toNumber(e.target.value))}
+                error={!isViscosityValid}
+                helperText={!isViscosityValid ? "Вязкость должна быть больше 0" : undefined}
                 sx={{
                   minWidth: 210,
                   "& .MuiOutlinedInput-root": { borderRadius: 1.5, bgcolor: "#f8fbff" },
@@ -303,6 +316,8 @@ const PumpUnitsPage = observer(() => {
                 type="number"
                 value={pumpUnitsStore.assemblyRho}
                 onChange={(e) => pumpUnitsStore.setAssemblyRho(toNumber(e.target.value))}
+                error={!isDensityValid}
+                helperText={!isDensityValid ? "Плотность должна быть в диапазоне 800-2000" : undefined}
                 sx={{
                   minWidth: 210,
                   "& .MuiOutlinedInput-root": { borderRadius: 1.5, bgcolor: "#f8fbff" },

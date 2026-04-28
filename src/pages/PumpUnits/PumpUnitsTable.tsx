@@ -10,6 +10,7 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import type { PumpDto } from "entities/pumpDatabase/types/pumpTypes";
@@ -109,6 +110,21 @@ const flatInputSx = {
   "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
     border: "none",
   },
+  "& .MuiOutlinedInput-root.Mui-error .MuiOutlinedInput-notchedOutline": {
+    border: "1px solid",
+    borderColor: "error.main",
+  },
+  "& .MuiOutlinedInput-root.Mui-error:hover .MuiOutlinedInput-notchedOutline": {
+    border: "1px solid",
+    borderColor: "error.main",
+  },
+  "& .MuiOutlinedInput-root.Mui-error.Mui-focused .MuiOutlinedInput-notchedOutline": {
+    border: "1px solid",
+    borderColor: "error.main",
+  },
+  "& .MuiFormHelperText-root": {
+    display: "none",
+  },
   "& .MuiInputBase-input": {
     fontSize: "0.71rem",
     textAlign: "center",
@@ -162,13 +178,23 @@ export default function PumpUnitsTable({
   onStepsCountChange,
 }: Props) {
   const [draftByKey, setDraftByKey] = useState<Record<string, string>>({});
+  const isPositive = (value: number): boolean => value > 0;
 
   const marksByManufacturer = (manufacturer: string) =>
     allPumps.filter((p) => p.manufacturer === manufacturer);
 
-  const parseNumber = (value: string): number => {
-    const parsed = Number(value.replace(",", "."));
-    return Number.isFinite(parsed) ? parsed : 0;
+  const parseNumberOrNull = (value: string): number | null => {
+    const normalized = value.replace(",", ".").trim();
+    if (
+      normalized === "" ||
+      normalized === "-" ||
+      normalized === "." ||
+      normalized === ","
+    ) {
+      return null;
+    }
+    const parsed = Number(normalized);
+    return Number.isFinite(parsed) ? parsed : null;
   };
 
   const setDraft = (key: string, value: string) => {
@@ -184,25 +210,57 @@ export default function PumpUnitsTable({
     });
   };
 
-  const onNumericChange = (key: string, nextRaw: string, onCommit: (value: number) => void) => {
+  const onNumericChange = (
+    key: string,
+    nextRaw: string,
+    onCommit: (value: number) => void
+  ) => {
     // Allow temporary empty value and decimal typing state.
     if (!/^-?\d*([.,]\d*)?$/.test(nextRaw)) return;
     setDraft(key, nextRaw);
-    if (nextRaw === "" || nextRaw === "-" || nextRaw === "." || nextRaw === ",") return;
-    onCommit(parseNumber(nextRaw));
+    const parsed = parseNumberOrNull(nextRaw);
+    if (parsed === null) return;
+    onCommit(parsed);
   };
 
-  const onNumericBlur = (key: string, onCommit: (value: number) => void) => {
+  const onNumericBlur = (
+    key: string,
+    onCommit: (value: number) => void
+  ) => {
     const raw = draftByKey[key];
     if (raw === undefined) return;
-    if (raw === "" || raw === "-" || raw === "." || raw === ",") {
-      onCommit(0);
+    const parsed = parseNumberOrNull(raw);
+    if (parsed === null) {
       clearDraft(key);
       return;
     }
-    onCommit(parseNumber(raw));
+    onCommit(parsed);
     clearDraft(key);
   };
+
+  const isPositiveFieldInvalid = (key: string, committedValue: number): boolean => {
+    const raw = draftByKey[key];
+    if (raw === undefined) {
+      return !isPositive(committedValue);
+    }
+    const parsed = parseNumberOrNull(raw);
+    return parsed === null || !isPositive(parsed);
+  };
+  const positiveErrorText = "Значение должно быть больше 0";
+  const errorTooltipSlotProps = {
+    tooltip: {
+      sx: {
+        bgcolor: "error.main",
+        color: "common.white",
+        fontSize: "0.75rem",
+      },
+    },
+    arrow: {
+      sx: {
+        color: "error.main",
+      },
+    },
+  } as const;
 
   const allRowsChecked = data.length > 0 && data.every((r) => r.checked);
   const someRowsChecked = data.some((r) => r.checked);
@@ -396,72 +454,111 @@ export default function PumpUnitsTable({
               </TableCell>
               <TableCell sx={cellSx}>{fmt(row.impellerFrequency)}</TableCell>
               <TableCell sx={cellSx}>
-                <TextField
-                  size="small"
-                  type="text"
-                  inputMode="decimal"
-                  value={
-                    draftByKey[`currentImpellerFrequency:${row.rowId}`] ??
-                    String(row.currentImpellerFrequency)
+                <Tooltip
+                  title={
+                    isPositiveFieldInvalid(`currentImpellerFrequency:${row.rowId}`, row.currentImpellerFrequency)
+                      ? positiveErrorText
+                      : ""
                   }
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) =>
-                    onNumericChange(
-                      `currentImpellerFrequency:${row.rowId}`,
-                      e.target.value,
-                      (v) => onCurrentFrequencyChange(row.rowId, v)
-                    )
-                  }
-                  onBlur={() =>
-                    onNumericBlur(`currentImpellerFrequency:${row.rowId}`, (v) =>
-                      onCurrentFrequencyChange(row.rowId, v)
-                    )
-                  }
-                  sx={flatInputSx}
-                />
+                  placement="top"
+                  arrow
+                  slotProps={errorTooltipSlotProps}
+                >
+                  <TextField
+                    size="small"
+                    type="text"
+                    inputMode="decimal"
+                    value={
+                      draftByKey[`currentImpellerFrequency:${row.rowId}`] ??
+                      String(row.currentImpellerFrequency)
+                    }
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) =>
+                      onNumericChange(
+                        `currentImpellerFrequency:${row.rowId}`,
+                        e.target.value,
+                        (v) => onCurrentFrequencyChange(row.rowId, v)
+                      )
+                    }
+                    onBlur={() =>
+                      onNumericBlur(
+                        `currentImpellerFrequency:${row.rowId}`,
+                        (v) => onCurrentFrequencyChange(row.rowId, v)
+                      )
+                    }
+                    error={isPositiveFieldInvalid(`currentImpellerFrequency:${row.rowId}`, row.currentImpellerFrequency)}
+                    sx={flatInputSx}
+                  />
+                </Tooltip>
               </TableCell>
               <TableCell sx={cellSx}>
-                <TextField
-                  size="small"
-                  type="text"
-                  inputMode="decimal"
-                  value={draftByKey[`headCorrection:${row.rowId}`] ?? String(row.headCorrection)}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) =>
-                    onNumericChange(`headCorrection:${row.rowId}`, e.target.value, (v) =>
-                      onHeadCorrectionChange(row.rowId, v)
-                    )
+                <Tooltip
+                  title={
+                    isPositiveFieldInvalid(`headCorrection:${row.rowId}`, row.headCorrection)
+                      ? positiveErrorText
+                      : ""
                   }
-                  onBlur={() =>
-                    onNumericBlur(`headCorrection:${row.rowId}`, (v) =>
-                      onHeadCorrectionChange(row.rowId, v)
-                    )
-                  }
-                  sx={flatInputSx}
-                />
+                  placement="top"
+                  arrow
+                  slotProps={errorTooltipSlotProps}
+                >
+                  <TextField
+                    size="small"
+                    type="text"
+                    inputMode="decimal"
+                    value={draftByKey[`headCorrection:${row.rowId}`] ?? String(row.headCorrection)}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) =>
+                      onNumericChange(`headCorrection:${row.rowId}`, e.target.value, (v) =>
+                        onHeadCorrectionChange(row.rowId, v)
+                      )
+                    }
+                    onBlur={() =>
+                      onNumericBlur(
+                        `headCorrection:${row.rowId}`,
+                        (v) => onHeadCorrectionChange(row.rowId, v)
+                      )
+                    }
+                    error={isPositiveFieldInvalid(`headCorrection:${row.rowId}`, row.headCorrection)}
+                    sx={flatInputSx}
+                  />
+                </Tooltip>
               </TableCell>
               <TableCell sx={cellSx}>
-                <TextField
-                  size="small"
-                  type="text"
-                  inputMode="decimal"
-                  value={
-                    draftByKey[`efficiencyCorrection:${row.rowId}`] ??
-                    String(row.efficiencyCorrection)
+                <Tooltip
+                  title={
+                    isPositiveFieldInvalid(`efficiencyCorrection:${row.rowId}`, row.efficiencyCorrection)
+                      ? positiveErrorText
+                      : ""
                   }
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) =>
-                    onNumericChange(`efficiencyCorrection:${row.rowId}`, e.target.value, (v) =>
-                      onEfficiencyCorrectionChange(row.rowId, v)
-                    )
-                  }
-                  onBlur={() =>
-                    onNumericBlur(`efficiencyCorrection:${row.rowId}`, (v) =>
-                      onEfficiencyCorrectionChange(row.rowId, v)
-                    )
-                  }
-                  sx={flatInputSx}
-                />
+                  placement="top"
+                  arrow
+                  slotProps={errorTooltipSlotProps}
+                >
+                  <TextField
+                    size="small"
+                    type="text"
+                    inputMode="decimal"
+                    value={
+                      draftByKey[`efficiencyCorrection:${row.rowId}`] ??
+                      String(row.efficiencyCorrection)
+                    }
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) =>
+                      onNumericChange(`efficiencyCorrection:${row.rowId}`, e.target.value, (v) =>
+                        onEfficiencyCorrectionChange(row.rowId, v)
+                      )
+                    }
+                    onBlur={() =>
+                      onNumericBlur(
+                        `efficiencyCorrection:${row.rowId}`,
+                        (v) => onEfficiencyCorrectionChange(row.rowId, v)
+                      )
+                    }
+                    error={isPositiveFieldInvalid(`efficiencyCorrection:${row.rowId}`, row.efficiencyCorrection)}
+                    sx={flatInputSx}
+                  />
+                </Tooltip>
               </TableCell>
               <TableCell sx={cellSx}>
                 <Select
@@ -482,89 +579,159 @@ export default function PumpUnitsTable({
                 </Select>
               </TableCell>
               <TableCell sx={cellSx}>
-                <TextField
-                  size="small"
-                  type="text"
-                  inputMode="decimal"
-                  value={draftByKey[`wheelDiameter:${row.rowId}`] ?? String(row.wheelDiameter)}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) =>
-                    onNumericChange(`wheelDiameter:${row.rowId}`, e.target.value, (v) =>
-                      onWheelDiameterChange(row.rowId, v)
-                    )
+                <Tooltip
+                  title={
+                    isPositiveFieldInvalid(`wheelDiameter:${row.rowId}`, row.wheelDiameter)
+                      ? positiveErrorText
+                      : ""
                   }
-                  onBlur={() =>
-                    onNumericBlur(`wheelDiameter:${row.rowId}`, (v) =>
-                      onWheelDiameterChange(row.rowId, v)
-                    )
-                  }
-                  sx={flatInputSx}
-                />
+                  placement="top"
+                  arrow
+                  slotProps={errorTooltipSlotProps}
+                >
+                  <TextField
+                    size="small"
+                    type="text"
+                    inputMode="decimal"
+                    value={draftByKey[`wheelDiameter:${row.rowId}`] ?? String(row.wheelDiameter)}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) =>
+                      onNumericChange(`wheelDiameter:${row.rowId}`, e.target.value, (v) =>
+                        onWheelDiameterChange(row.rowId, v)
+                      )
+                    }
+                    onBlur={() =>
+                      onNumericBlur(
+                        `wheelDiameter:${row.rowId}`,
+                        (v) => onWheelDiameterChange(row.rowId, v)
+                      )
+                    }
+                    error={isPositiveFieldInvalid(`wheelDiameter:${row.rowId}`, row.wheelDiameter)}
+                    sx={flatInputSx}
+                  />
+                </Tooltip>
               </TableCell>
               <TableCell sx={cellSx}>
-                <TextField
-                  size="small"
-                  type="text"
-                  inputMode="decimal"
-                  value={
-                    draftByKey[`impellerBladeWidth:${row.rowId}`] ?? String(row.impellerBladeWidth)
+                <Tooltip
+                  title={
+                    row.correctionType === "single" &&
+                    isPositiveFieldInvalid(`impellerBladeWidth:${row.rowId}`, row.impellerBladeWidth)
+                      ? positiveErrorText
+                      : ""
                   }
-                  disabled={row.correctionType !== "single"}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) =>
-                    onNumericChange(`impellerBladeWidth:${row.rowId}`, e.target.value, (v) =>
-                      onImpellerBladeWidthChange(row.rowId, v)
-                    )
-                  }
-                  onBlur={() =>
-                    onNumericBlur(`impellerBladeWidth:${row.rowId}`, (v) =>
-                      onImpellerBladeWidthChange(row.rowId, v)
-                    )
-                  }
-                  sx={flatInputSx}
-                />
+                  placement="top"
+                  arrow
+                  slotProps={errorTooltipSlotProps}
+                >
+                  <span style={{ display: "block", width: "100%" }}>
+                    <TextField
+                      size="small"
+                      type="text"
+                      inputMode="decimal"
+                      value={
+                        draftByKey[`impellerBladeWidth:${row.rowId}`] ?? String(row.impellerBladeWidth)
+                      }
+                      disabled={row.correctionType !== "single"}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) =>
+                        onNumericChange(`impellerBladeWidth:${row.rowId}`, e.target.value, (v) =>
+                          onImpellerBladeWidthChange(row.rowId, v)
+                        )
+                      }
+                      onBlur={() =>
+                        onNumericBlur(
+                          `impellerBladeWidth:${row.rowId}`,
+                          (v) => onImpellerBladeWidthChange(row.rowId, v)
+                        )
+                      }
+                      error={
+                        row.correctionType === "single" &&
+                        isPositiveFieldInvalid(`impellerBladeWidth:${row.rowId}`, row.impellerBladeWidth)
+                      }
+                      sx={flatInputSx}
+                    />
+                  </span>
+                </Tooltip>
               </TableCell>
               <TableCell sx={cellSx}>
-                <TextField
-                  size="small"
-                  type="text"
-                  inputMode="decimal"
-                  value={draftByKey[`inflowsCount:${row.rowId}`] ?? String(row.inflowsCount)}
-                  disabled={row.correctionType !== "mainline"}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) =>
-                    onNumericChange(`inflowsCount:${row.rowId}`, e.target.value, (v) =>
-                      onInflowsCountChange(row.rowId, v)
-                    )
+                <Tooltip
+                  title={
+                    row.correctionType === "mainline" &&
+                    isPositiveFieldInvalid(`inflowsCount:${row.rowId}`, row.inflowsCount)
+                      ? positiveErrorText
+                      : ""
                   }
-                  onBlur={() =>
-                    onNumericBlur(`inflowsCount:${row.rowId}`, (v) =>
-                      onInflowsCountChange(row.rowId, v)
-                    )
-                  }
-                  sx={flatInputSx}
-                />
+                  placement="top"
+                  arrow
+                  slotProps={errorTooltipSlotProps}
+                >
+                  <span style={{ display: "block", width: "100%" }}>
+                    <TextField
+                      size="small"
+                      type="text"
+                      inputMode="decimal"
+                      value={draftByKey[`inflowsCount:${row.rowId}`] ?? String(row.inflowsCount)}
+                      disabled={row.correctionType !== "mainline"}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) =>
+                        onNumericChange(`inflowsCount:${row.rowId}`, e.target.value, (v) =>
+                          onInflowsCountChange(row.rowId, v)
+                        )
+                      }
+                      onBlur={() =>
+                        onNumericBlur(
+                          `inflowsCount:${row.rowId}`,
+                          (v) => onInflowsCountChange(row.rowId, v)
+                        )
+                      }
+                      error={
+                        row.correctionType === "mainline" &&
+                        isPositiveFieldInvalid(`inflowsCount:${row.rowId}`, row.inflowsCount)
+                      }
+                      sx={flatInputSx}
+                    />
+                  </span>
+                </Tooltip>
               </TableCell>
               <TableCell sx={cellSx}>
-                <TextField
-                  size="small"
-                  type="text"
-                  inputMode="decimal"
-                  value={draftByKey[`stepsCount:${row.rowId}`] ?? String(row.stepsCount)}
-                  disabled={row.correctionType !== "mainline"}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) =>
-                    onNumericChange(`stepsCount:${row.rowId}`, e.target.value, (v) =>
-                      onStepsCountChange(row.rowId, v)
-                    )
+                <Tooltip
+                  title={
+                    row.correctionType === "mainline" &&
+                    isPositiveFieldInvalid(`stepsCount:${row.rowId}`, row.stepsCount)
+                      ? positiveErrorText
+                      : ""
                   }
-                  onBlur={() =>
-                    onNumericBlur(`stepsCount:${row.rowId}`, (v) =>
-                      onStepsCountChange(row.rowId, v)
-                    )
-                  }
-                  sx={flatInputSx}
-                />
+                  placement="top"
+                  arrow
+                  slotProps={errorTooltipSlotProps}
+                >
+                  <span style={{ display: "block", width: "100%" }}>
+                    <TextField
+                      size="small"
+                      type="text"
+                      inputMode="decimal"
+                      value={draftByKey[`stepsCount:${row.rowId}`] ?? String(row.stepsCount)}
+                      disabled={row.correctionType !== "mainline"}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) =>
+                        onNumericChange(`stepsCount:${row.rowId}`, e.target.value, (v) =>
+                          onStepsCountChange(row.rowId, v)
+                        )
+                      }
+                      onBlur={() =>
+                        onNumericBlur(
+                          `stepsCount:${row.rowId}`,
+                          (v) => onStepsCountChange(row.rowId, v)
+                        )
+                      }
+                      error={
+                        row.correctionType === "mainline" &&
+                        isPositiveFieldInvalid(`stepsCount:${row.rowId}`, row.stepsCount)
+                      }
+                      sx={flatInputSx}
+                    />
+                  </span>
+                </Tooltip>
               </TableCell>
             </TableRow>
           ))}

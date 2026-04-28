@@ -35,6 +35,18 @@ const PumpUnitSelectionPage = observer(() => {
   const [maxParallelChecked, setMaxParallelChecked] = useState(true);
   const [maxSequentialChecked, setMaxSequentialChecked] = useState(true);
   const [resultRows, setResultRows] = useState<PumpAssemblyRow[]>([]);
+  const [touchedFields, setTouchedFields] = useState({
+    rate: false,
+    maxDeviation: false,
+    head: false,
+    pressure: false,
+    headDeviation: false,
+    pressureDeviation: false,
+    headCorrection: false,
+    passportFrequency: false,
+    maxParallel: false,
+    maxSequential: false,
+  });
 
   const asNum = (v: unknown, fallback = 0) =>
     typeof v === "number" && Number.isFinite(v) ? v : fallback;
@@ -87,6 +99,41 @@ const PumpUnitSelectionPage = observer(() => {
   }, [pumpDatabaseStore.pumps]);
 
   const hasSelectionResult = resultRows.length > 0;
+  const isRateValid = pumpUnitsStore.assemblyGvMix > 0;
+  const isMaxDeviationValid = maxDeviation >= 0;
+  const isHeadValid = pumpUnitsStore.assemblyRho > 0;
+  const isPressureValid = pumpUnitsStore.assemblyNu > 0;
+  const isHeadDeviationValid = headDeviation >= 0;
+  const isPressureDeviationValid = pressureDeviation >= 0;
+  const isHeadCorrectionValid = !useHeadCorrection || headCorrectionValue > 0;
+  const isPassportFrequencyValid = !usePassportFrequency || passportFrequencyValue > 0;
+  const isMaxParallelValid = !maxParallelChecked || maxParallel >= 2;
+  const isMaxSequentialValid = !maxSequentialChecked || maxSequential >= 2;
+  const isSelectionFormValid =
+    isRateValid &&
+    isMaxDeviationValid &&
+    isHeadDeviationValid &&
+    isPressureDeviationValid &&
+    isHeadCorrectionValid &&
+    isPassportFrequencyValid &&
+    isMaxParallelValid &&
+    isMaxSequentialValid &&
+    (criterion === "head" ? isHeadValid : isPressureValid);
+  const touchField = (field: keyof typeof touchedFields) =>
+    setTouchedFields((prev) => ({ ...prev, [field]: true }));
+  const touchAllFields = () =>
+    setTouchedFields({
+      rate: true,
+      maxDeviation: true,
+      head: true,
+      pressure: true,
+      headDeviation: true,
+      pressureDeviation: true,
+      headCorrection: true,
+      passportFrequency: true,
+      maxParallel: true,
+      maxSequential: true,
+    });
 
   return (
     <Box
@@ -129,6 +176,9 @@ const PumpUnitSelectionPage = observer(() => {
             size="small"
             value={pumpUnitsStore.assemblyGvMix}
             onChange={(e) => pumpUnitsStore.setAssemblyGvMix(toNumber(e.target.value))}
+            onBlur={() => touchField("rate")}
+            error={touchedFields.rate && !isRateValid}
+            helperText={touchedFields.rate && !isRateValid ? "Расход должен быть больше 0" : undefined}
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
           />
           <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
@@ -138,6 +188,11 @@ const PumpUnitSelectionPage = observer(() => {
             size="small"
             value={maxDeviation}
             onChange={(e) => setMaxDeviation(toNumber(e.target.value))}
+            onBlur={() => touchField("maxDeviation")}
+            error={touchedFields.maxDeviation && !isMaxDeviationValid}
+            helperText={
+              touchedFields.maxDeviation && !isMaxDeviationValid ? "Максимальное отклонение должно быть не меньше 0" : undefined
+            }
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
           />
         </Box>
@@ -176,6 +231,17 @@ const PumpUnitSelectionPage = observer(() => {
                 ? pumpUnitsStore.setAssemblyRho(toNumber(e.target.value))
                 : pumpUnitsStore.setAssemblyNu(toNumber(e.target.value))
             }
+            onBlur={() => touchField(criterion === "head" ? "head" : "pressure")}
+            error={criterion === "head" ? touchedFields.head && !isHeadValid : touchedFields.pressure && !isPressureValid}
+            helperText={
+              criterion === "head"
+                ? touchedFields.head && !isHeadValid
+                  ? "Напор должен быть больше 0"
+                  : undefined
+                : touchedFields.pressure && !isPressureValid
+                  ? "Перепад давления должен быть больше 0"
+                  : undefined
+            }
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
           />
           <Typography sx={{ fontSize: 12, color: "text.secondary" }}>
@@ -186,6 +252,21 @@ const PumpUnitSelectionPage = observer(() => {
             value={criterion === "head" ? headDeviation : pressureDeviation}
             onChange={(e) =>
               criterion === "head" ? setHeadDeviation(toNumber(e.target.value)) : setPressureDeviation(toNumber(e.target.value))
+            }
+            onBlur={() => touchField(criterion === "head" ? "headDeviation" : "pressureDeviation")}
+            error={
+              criterion === "head"
+                ? touchedFields.headDeviation && !isHeadDeviationValid
+                : touchedFields.pressureDeviation && !isPressureDeviationValid
+            }
+            helperText={
+              criterion === "head"
+                ? touchedFields.headDeviation && !isHeadDeviationValid
+                  ? "Максимальное отклонение должно быть не меньше 0"
+                  : undefined
+                : touchedFields.pressureDeviation && !isPressureDeviationValid
+                  ? "Максимальное отклонение должно быть не меньше 0"
+                  : undefined
             }
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
           />
@@ -208,7 +289,14 @@ const PumpUnitSelectionPage = observer(() => {
             size="small"
             value={headCorrectionValue}
             onChange={(e) => setHeadCorrectionValue(toNumber(e.target.value))}
+            onBlur={() => touchField("headCorrection")}
             disabled={!useHeadCorrection}
+            error={useHeadCorrection && touchedFields.headCorrection && !isHeadCorrectionValid}
+            helperText={
+              useHeadCorrection && touchedFields.headCorrection && !isHeadCorrectionValid
+                ? "Коррекция напора должна быть больше 0"
+                : undefined
+            }
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
           />
           <FormControlLabel
@@ -221,6 +309,13 @@ const PumpUnitSelectionPage = observer(() => {
             disabled={!maxParallelChecked}
             value={maxParallel}
             onChange={(e) => setMaxParallel(toNumber(e.target.value))}
+            onBlur={() => touchField("maxParallel")}
+            error={maxParallelChecked && touchedFields.maxParallel && !isMaxParallelValid}
+            helperText={
+              maxParallelChecked && touchedFields.maxParallel && !isMaxParallelValid
+                ? "Максимальное число параллельных насосов должно быть не меньше 2"
+                : undefined
+            }
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
           />
         </Box>
@@ -242,7 +337,14 @@ const PumpUnitSelectionPage = observer(() => {
             size="small"
             value={passportFrequencyValue}
             onChange={(e) => setPassportFrequencyValue(toNumber(e.target.value))}
+            onBlur={() => touchField("passportFrequency")}
             disabled={!usePassportFrequency}
+            error={usePassportFrequency && touchedFields.passportFrequency && !isPassportFrequencyValid}
+            helperText={
+              usePassportFrequency && touchedFields.passportFrequency && !isPassportFrequencyValid
+                ? "Паспортная частота должна быть больше 0"
+                : undefined
+            }
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
           />
           <FormControlLabel
@@ -255,6 +357,13 @@ const PumpUnitSelectionPage = observer(() => {
             disabled={!maxSequentialChecked}
             value={maxSequential}
             onChange={(e) => setMaxSequential(toNumber(e.target.value))}
+            onBlur={() => touchField("maxSequential")}
+            error={maxSequentialChecked && touchedFields.maxSequential && !isMaxSequentialValid}
+            helperText={
+              maxSequentialChecked && touchedFields.maxSequential && !isMaxSequentialValid
+                ? "Максимальное число последовательных насосов должно быть не меньше 2"
+                : undefined
+            }
             sx={{ "& .MuiOutlinedInput-root": { bgcolor: "#f8fbff", borderRadius: 1.5 } }}
           />
         </Box>
@@ -263,7 +372,7 @@ const PumpUnitSelectionPage = observer(() => {
             <Button
               size="small"
               variant="contained"
-              disabled={pumpUnitsSelectionStore.loading}
+              disabled={pumpUnitsSelectionStore.loading || !isSelectionFormValid}
               sx={{
                 borderRadius: 1.5,
                 textTransform: "none",
@@ -273,6 +382,10 @@ const PumpUnitSelectionPage = observer(() => {
                 "&:hover": { bgcolor: "#132a47" },
               }}
               onClick={async () => {
+                touchAllFields();
+                if (!isSelectionFormValid) {
+                  return;
+                }
                 const body: PumpAssemblyAdjustRequest = {
                   rate: pumpUnitsStore.assemblyGvMix,
                   workingAreaDelta: maxDeviation,

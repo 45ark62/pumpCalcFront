@@ -57,6 +57,15 @@ function parseNum(s: string): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function parseNumOrNull(s: string): number | null {
+  const t = s.replace(/\s/g, '').replace(',', '.');
+  if (t.length === 0) {
+    return null;
+  }
+  const n = Number(t);
+  return Number.isFinite(n) ? n : null;
+}
+
 type Props = {
   /** Скрыть шапку с названием — если заголовок вынесен в родителя */
   hideHeader?: boolean;
@@ -90,6 +99,12 @@ export default function PumpCurvePointsTable({
   const [editRate, setEditRate] = useState('');
   const [editHead, setEditHead] = useState('');
   const [editEff, setEditEff] = useState('');
+  const [editTouched, setEditTouched] = useState({
+    rate: false,
+    head: false,
+    efficiency: false,
+  });
+  const [editSubmitAttempted, setEditSubmitAttempted] = useState(false);
 
   const openEdit = (index: number) => {
     const p = curvePoints[index];
@@ -98,6 +113,8 @@ export default function PumpCurvePointsTable({
     setEditRate(String(p.rate));
     setEditHead(String(p.head));
     setEditEff(String(p.efficiency));
+    setEditTouched({ rate: false, head: false, efficiency: false });
+    setEditSubmitAttempted(false);
     setEditOpen(true);
   };
 
@@ -108,14 +125,26 @@ export default function PumpCurvePointsTable({
 
   const applyEdit = () => {
     if (editIndex === null) return;
+    setEditSubmitAttempted(true);
+    const nextRate = parseNumOrNull(editRate);
+    const nextHead = parseNumOrNull(editHead);
+    const nextEfficiency = parseNumOrNull(editEff);
+    const isRateValid = nextRate !== null && nextRate >= 0;
+    const isHeadValid = nextHead !== null && nextHead >= 0;
+    const isEfficiencyValid =
+      nextEfficiency !== null && nextEfficiency >= 0 && nextEfficiency <= 100;
+    if (!isRateValid || !isHeadValid || !isEfficiencyValid) {
+      return;
+    }
+
     const next = [...curvePoints];
     const row = next[editIndex];
     if (!row) return;
     next[editIndex] = {
       ...row,
-      rate: parseNum(editRate),
-      head: parseNum(editHead),
-      efficiency: parseNum(editEff),
+      rate: nextRate,
+      head: nextHead,
+      efficiency: nextEfficiency,
     };
     onCurvePointsChange(next);
     void persistIfUserPump(next);
@@ -160,6 +189,16 @@ export default function PumpCurvePointsTable({
     const cur = JSON.stringify(curvePoints);
     return orig !== cur;
   }, [pump, curvePoints]);
+
+  const parsedRate = parseNum(editRate);
+  const parsedHead = parseNum(editHead);
+  const parsedEfficiency = parseNumOrNull(editEff);
+  const isRateValid = parseNumOrNull(editRate) !== null && parsedRate >= 0;
+  const isHeadValid = parseNumOrNull(editHead) !== null && parsedHead >= 0;
+  const isEfficiencyValid = parsedEfficiency !== null && parsedEfficiency >= 0 && parsedEfficiency <= 100;
+  const shouldShowRateError = (editSubmitAttempted || editTouched.rate) && !isRateValid;
+  const shouldShowHeadError = (editSubmitAttempted || editTouched.head) && !isHeadValid;
+  const shouldShowEfficiencyError = (editSubmitAttempted || editTouched.efficiency) && !isEfficiencyValid;
 
   return (
     <TableContainer
@@ -369,28 +408,37 @@ export default function PumpCurvePointsTable({
       </Menu>
 
       <Dialog open={editOpen} onClose={() => setEditOpen(false)} maxWidth="xs" fullWidth>
-        <DialogTitle>Точка кривой</DialogTitle>
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 1 }}>
+        <DialogTitle sx={{ pb: '10px' }}>Точка кривой</DialogTitle>
+        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2, overflow: 'visible' }}>
           <TextField
             label="Расход, м³/ч"
             value={editRate}
             onChange={(e) => setEditRate(e.target.value)}
+            onBlur={() => setEditTouched((prev) => ({ ...prev, rate: true }))}
             size="small"
             fullWidth
+            error={shouldShowRateError}
+            helperText={shouldShowRateError ? 'Значение должно быть больше или равно 0' : undefined}
           />
           <TextField
             label="Напор, м"
             value={editHead}
             onChange={(e) => setEditHead(e.target.value)}
+            onBlur={() => setEditTouched((prev) => ({ ...prev, head: true }))}
             size="small"
             fullWidth
+            error={shouldShowHeadError}
+            helperText={shouldShowHeadError ? 'Значение должно быть больше или равно 0' : undefined}
           />
           <TextField
             label="КПД, %"
             value={editEff}
             onChange={(e) => setEditEff(e.target.value)}
+            onBlur={() => setEditTouched((prev) => ({ ...prev, efficiency: true }))}
             size="small"
             fullWidth
+            error={shouldShowEfficiencyError}
+            helperText={shouldShowEfficiencyError ? 'Значение должно быть от 0 до 100' : undefined}
           />
         </DialogContent>
         <DialogActions>
